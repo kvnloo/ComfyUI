@@ -7,12 +7,18 @@ import torch
 from custom_nodes.reconstruction_evidence import (
     ReconstructionEvidenceBundle,
     _safe_label,
+    _safe_model_label,
     _workflow_shape_hash,
 )
 
 
 def test_safe_label_cannot_create_paths():
     assert _safe_label("../../weird / name") == "weird-name"
+
+
+def test_model_label_drops_local_paths():
+    assert _safe_model_label("/home/user/models/da3-base.safetensors") == "da3-base.safetensors"
+    assert _safe_model_label(r"C:\\models\\da3-base.safetensors") == "da3-base.safetensors"
 
 
 def test_workflow_shape_hash_ignores_literal_prompt_values():
@@ -62,6 +68,7 @@ def test_bundle_writes_relative_hashed_artifacts_without_prompt_text(tmp_path, m
         foreground,
         reference_state="measured",
         bundle_label="../chair reference",
+        model_label="/home/user/models/da3-base.safetensors",
         material_mask=material,
         prompt=prompt,
     )
@@ -76,6 +83,8 @@ def test_bundle_writes_relative_hashed_artifacts_without_prompt_text(tmp_path, m
     assert manifest["kind"] == "reconstruction-evidence"
     assert manifest["schemaVersion"] == 1
     assert manifest["producer"]["workflowShapeSha256"] == _workflow_shape_hash(prompt)
+    assert manifest["producer"]["modelLabel"] == "da3-base.safetensors"
+    assert "/home/user/models" not in manifest_text
 
     by_role = {}
     for artifact in manifest["artifacts"]:
