@@ -21,6 +21,13 @@ def _safe_label(value: str) -> str:
     return (label[:48] or "bundle")
 
 
+def _safe_model_label(value: str) -> str:
+    normalized = str(value).strip().replace("\\", "/")
+    basename = normalized.rsplit("/", 1)[-1]
+    label = re.sub(r"[^A-Za-z0-9._-]+", "-", basename).strip("._-")
+    return (label[:128] or "unspecified")
+
+
 def _workflow_shape_value(value: Any, key: str | None = None) -> Any:
     if key == "class_type" and isinstance(value, str):
         return value
@@ -156,6 +163,7 @@ class ReconstructionEvidenceBundle:
                 "foreground_mask": ("MASK",),
                 "reference_state": (_ALLOWED_REFERENCE_STATES,),
                 "bundle_label": ("STRING", {"default": "reference"}),
+                "model_label": ("STRING", {"default": "unspecified"}),
             },
             "optional": {
                 "material_mask": ("MASK",),
@@ -181,6 +189,7 @@ class ReconstructionEvidenceBundle:
         foreground_mask,
         reference_state="measured",
         bundle_label="reference",
+        model_label="unspecified",
         material_mask=None,
         prompt=None,
     ):
@@ -207,7 +216,9 @@ class ReconstructionEvidenceBundle:
         material_png = _png_mask(material) if material is not None else None
 
         workflow_shape_hash = _workflow_shape_hash(prompt)
+        model_label = _safe_model_label(model_label)
         digest = hashlib.sha256()
+        digest.update(model_label.encode("utf-8"))
         for payload in (reference_png, depth_png, foreground_png, material_png or b""):
             digest.update(payload)
         if workflow_shape_hash:
@@ -286,6 +297,7 @@ class ReconstructionEvidenceBundle:
         producer: dict[str, Any] = {
             "runtime": "ComfyUI",
             "node": "ReconstructionEvidenceBundle",
+            "modelLabel": model_label,
         }
         if workflow_shape_hash:
             producer["workflowShapeSha256"] = workflow_shape_hash
