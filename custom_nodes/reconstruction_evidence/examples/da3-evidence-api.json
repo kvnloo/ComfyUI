@@ -1,0 +1,65 @@
+{
+  "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "reference.png"
+    }
+  },
+  "2": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "foreground-mask.png"
+    }
+  },
+  "3": {
+    "class_type": "ImageToMask",
+    "inputs": {
+      "image": [
+        "2",
+        0
+      ],
+      "channel": "red"
+    }
+  },
+  "4": {
+    "class_type": "LoadDA3Model",
+    "inputs": {
+      "model_name": "depth_anything_3_mono_large.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "5": {
+    "class_type": "DA3Inference",
+    "inputs": {
+      "da3_model": [
+        "4",
+        0
+      ],
+      "image": [
+        "1",
+        0
+      ],
+      "resolution": 504,
+      "resize_method": "upper_bound_resize",
+      "mode": {
+        "mode": "mono"
+      }
+    }
+  },
+  "6": {
+    "class_type": "ReconstructionEvidenceBundle",
+    "inputs": {
+      "da3_geometry": [
+        "5",
+        0
+      ],
+      "foreground_mask": [
+        "3",
+        0
+      ],
+      "reference_state": "measured",
+      "bundle_label": "reference",
+      "model_label": "depth_anything_3_mono_large.safetensors"
+    }
+  }
+}
