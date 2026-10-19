@@ -169,3 +169,26 @@ def test_bundle_rejects_non_finite_depth(tmp_path, monkeypatch):
         assert "non-finite" in str(exc)
     else:
         raise AssertionError("expected non-finite depth to fail")
+
+
+def test_da3_api_example_connects_real_model_and_explicit_foreground_mask():
+    root = Path(__file__).resolve().parents[2]
+    example = root / "custom_nodes/reconstruction_evidence/examples/da3-evidence-api.json"
+    graph = json.loads(example.read_text(encoding="utf-8"))
+
+    assert graph["1"]["class_type"] == "LoadImage"
+    assert graph["2"]["class_type"] == "LoadImage"
+    assert graph["2"]["inputs"]["image"] == "foreground-mask.png"
+    assert graph["3"]["class_type"] == "ImageToMask"
+    assert graph["3"]["inputs"] == {"image": ["2", 0], "channel": "red"}
+    assert graph["4"]["class_type"] == "LoadDA3Model"
+    assert graph["4"]["inputs"]["model_name"] == "depth_anything_3_base.safetensors"
+    assert graph["5"]["class_type"] == "DA3Inference"
+    assert graph["5"]["inputs"]["da3_model"] == ["4", 0]
+    assert graph["5"]["inputs"]["image"] == ["1", 0]
+    assert graph["5"]["inputs"]["mode"] == {"mode": "mono"}
+    assert graph["6"]["class_type"] == "ReconstructionEvidenceBundle"
+    assert graph["6"]["inputs"]["da3_geometry"] == ["5", 0]
+    assert graph["6"]["inputs"]["foreground_mask"] == ["3", 0]
+    assert graph["6"]["inputs"]["model_label"] == graph["4"]["inputs"]["model_name"]
+    assert all(node["class_type"] != "SolidMask" for node in graph.values())
