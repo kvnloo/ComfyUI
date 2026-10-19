@@ -112,7 +112,7 @@ def _single_depth(geometry: Any) -> tuple[np.ndarray, dict[str, float]]:
 
 def _png_rgb(array: np.ndarray) -> bytes:
     buffer = io.BytesIO()
-    Image.fromarray(np.rint(array * 255.0).astype(np.uint8), mode="RGB").save(
+    Image.fromarray(np.rint(array * 255.0).astype(np.uint8)).save(
         buffer, format="PNG", compress_level=4
     )
     return buffer.getvalue()
@@ -120,7 +120,7 @@ def _png_rgb(array: np.ndarray) -> bytes:
 
 def _png_mask(array: np.ndarray) -> bytes:
     buffer = io.BytesIO()
-    Image.fromarray(np.rint(array * 255.0).astype(np.uint8), mode="L").save(
+    Image.fromarray(np.rint(array * 255.0).astype(np.uint8)).save(
         buffer, format="PNG", compress_level=4
     )
     return buffer.getvalue()
@@ -128,7 +128,7 @@ def _png_mask(array: np.ndarray) -> bytes:
 
 def _png_depth_u16(array: np.ndarray) -> bytes:
     buffer = io.BytesIO()
-    Image.fromarray(np.rint(array * 65535.0).astype(np.uint16), mode="I;16").save(
+    Image.fromarray(np.rint(array * 65535.0).astype(np.uint16)).save(
         buffer, format="PNG", compress_level=4
     )
     return buffer.getvalue()
