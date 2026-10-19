@@ -92,7 +92,17 @@ def test_bundle_writes_relative_hashed_artifacts_without_prompt_text(tmp_path, m
         by_role.setdefault(artifact["role"], []).append(artifact)
         artifact_path = manifest_path.parent / artifact["relativePath"]
         assert artifact_path.is_file()
-        assert hashlib.sha256(artifact_path.read_bytes()).hexdigest() == artifact["sha256"]
+        payload = artifact_path.read_bytes()
+        assert hashlib.sha256(payload).hexdigest() == artifact["sha256"]
+        # Enforce actual PNG IHDR encodings, not only manifest declarations.
+        assert payload[:8] == b"\\x89PNG\\r\\n\\x1a\\n"
+        expected_ihdr = {
+            "reference": (8, 2),
+            "depth": (16, 0),
+            "foreground-mask": (8, 0),
+            "material-mask": (8, 0),
+        }
+        assert (payload[24], payload[25]) == expected_ihdr[artifact["role"]]
         assert artifact["dimensions"] == {"width": 2, "height": 2}
 
     assert by_role["reference"][0]["state"] == "measured"
