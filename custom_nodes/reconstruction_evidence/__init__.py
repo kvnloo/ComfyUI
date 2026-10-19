@@ -68,6 +68,8 @@ def _single_image(images: Any, field: str) -> np.ndarray:
         raise ValueError(f"{field} must be a tensor-like IMAGE") from exc
     if array.ndim != 4 or array.shape[0] != 1 or array.shape[-1] < 3:
         raise ValueError(f"{field} must contain exactly one HxWx3 IMAGE")
+    if not np.isfinite(array).all():
+        raise ValueError(f"{field} contains non-finite values")
     return np.clip(array[0, :, :, :3], 0.0, 1.0)
 
 
@@ -82,6 +84,8 @@ def _single_mask(mask: Any, field: str) -> np.ndarray:
         array = array[0, :, :, 0]
     if array.ndim != 2:
         raise ValueError(f"{field} must contain exactly one HxW MASK")
+    if not np.isfinite(array).all():
+        raise ValueError(f"{field} contains non-finite values")
     return np.clip(array, 0.0, 1.0)
 
 
