@@ -95,7 +95,7 @@ def test_bundle_writes_relative_hashed_artifacts_without_prompt_text(tmp_path, m
         payload = artifact_path.read_bytes()
         assert hashlib.sha256(payload).hexdigest() == artifact["sha256"]
         # Enforce actual PNG IHDR encodings, not only manifest declarations.
-        assert payload[:8] == b"\\x89PNG\\r\\n\\x1a\\n"
+        assert payload[:8] == bytes.fromhex("89504e470d0a1a0a")
         expected_ihdr = {
             "reference": (8, 2),
             "depth": (16, 0),
