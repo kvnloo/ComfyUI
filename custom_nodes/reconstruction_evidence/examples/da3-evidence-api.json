@@ -24,7 +24,7 @@
   "4": {
     "class_type": "LoadDA3Model",
     "inputs": {
-      "model_name": "depth_anything_3_mono_large.safetensors",
+      "model_name": "depth_anything_3_base.safetensors",
       "weight_dtype": "default"
     }
   },
@@ -59,7 +59,7 @@
       ],
       "reference_state": "measured",
       "bundle_label": "reference",
-      "model_label": "depth_anything_3_mono_large.safetensors"
+      "model_label": "depth_anything_3_base.safetensors"
     }
   }
 }
