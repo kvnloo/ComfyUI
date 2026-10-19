@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import torch
+import pytest
 
 from custom_nodes.reconstruction_evidence import (
     ReconstructionEvidenceBundle,
@@ -120,6 +121,34 @@ def test_bundle_rejects_dimension_mismatch(tmp_path, monkeypatch):
         assert "do not match" in str(exc)
     else:
         raise AssertionError("expected dimension mismatch to fail")
+
+
+@pytest.mark.parametrize("field", ["image", "foreground_mask", "material_mask"])
+@pytest.mark.parametrize("non_finite", [float("nan"), float("inf"), float("-inf")])
+def test_bundle_rejects_non_finite_image_and_masks(tmp_path, monkeypatch, field, non_finite):
+    monkeypatch.setattr(
+        "custom_nodes.reconstruction_evidence.folder_paths.get_output_directory",
+        lambda: str(tmp_path),
+    )
+    geometry = {
+        "depth": torch.ones((1, 2, 2)),
+        "image": torch.ones((1, 2, 2, 3)),
+        "mode": "mono",
+    }
+    foreground = torch.ones((1, 2, 2))
+    material = torch.ones((1, 2, 2))
+    if field == "image":
+        geometry["image"][0, 0, 0, 0] = non_finite
+    elif field == "foreground_mask":
+        foreground[0, 0, 0] = non_finite
+    else:
+        material[0, 0, 0] = non_finite
+
+    with pytest.raises(ValueError, match=f"{field} contains non-finite values"):
+        ReconstructionEvidenceBundle().save_bundle(
+            geometry, foreground, material_mask=material
+        )
+    assert not (tmp_path / "reconstruction_evidence").exists()
 
 
 def test_bundle_rejects_non_finite_depth(tmp_path, monkeypatch):
